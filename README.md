@@ -233,6 +233,10 @@ rendered as an SVG rather than as HTML. If a file is not usable after cleaning, 
 CDN icons are fetched from jsdelivr only, and only when you turn the setting on. Nothing else
 leaves your machine.
 
+Saving the icons that are already in use reads the list of Markdown files and their text, because
+that is where the usages are. It runs only when you start that action, stays on your machine, and
+the note text is never sent anywhere.
+
 ## Mobile
 
 All commands run on the phone. To insert on the go, put a command such as Insert icon into note

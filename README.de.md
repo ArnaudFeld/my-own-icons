@@ -240,6 +240,10 @@ brauchbar, zeigt das Plugin `[name]` statt einer leeren Stelle.
 CDN-Icons kommen nur von jsdelivr, und nur wenn du den Schalter einschaltest. Sonst verlässt
 nichts deinen Rechner.
 
+Beim Speichern der bereits verwendeten Icons liest das Plugin die Liste der Markdown-Dateien und
+ihren Text, weil dort die Verwendungen stehen. Das passiert nur, wenn du die Aktion startest,
+bleibt auf deinem Rechner, und der Notiztext geht nirgendwohin.
+
 ## Mobil
 
 Alle Befehle laufen auch am Handy. Um unterwegs einzufügen, lege einen Befehl wie Icon in Notiz

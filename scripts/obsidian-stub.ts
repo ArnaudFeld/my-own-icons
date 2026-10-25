@@ -1,10 +1,40 @@
 /** Minimaler obsidian Ersatz nur für die Node Tests, nie im Plugin. */
 export class StubVault {
   files = new Map<string, string>();
+  folders = new Set<string>();
 
-  getAbstractFileByPath(path: string): TFile | null {
-    if (!this.files.has(path)) return null;
-    return this.asFile(path);
+  getAbstractFileByPath(path: string): TFile | TFolder | null {
+    if (this.files.has(path)) return this.asFile(path);
+    if (this.folders.has(path)) {
+      const folder = new TFolder();
+      folder.path = path;
+      return folder;
+    }
+    return null;
+  }
+
+  /** Wie im echten Vault: Elternordner muss stehen, doppelt wirft. */
+  async createFolder(path: string): Promise<void> {
+    const slash = path.lastIndexOf("/");
+    if (slash > 0 && !this.folders.has(path.slice(0, slash))) {
+      throw new Error(`Elternordner fehlt: ${path}`);
+    }
+    if (this.folders.has(path) || this.files.has(path)) {
+      throw new Error(`existiert: ${path}`);
+    }
+    this.folders.add(path);
+  }
+
+  getMarkdownFiles(): TFile[] {
+    return [...this.files.keys()]
+      .filter((path) => path.toLowerCase().endsWith(".md"))
+      .map((path) => this.asFile(path));
+  }
+
+  async cachedRead(file: TFile): Promise<string> {
+    const content = this.files.get(file.path);
+    if (content === undefined) throw new Error(`fehlend: ${file.path}`);
+    return content;
   }
 
   getFiles(): TFile[] {

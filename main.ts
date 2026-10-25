@@ -27,9 +27,7 @@ import {
   isDarkTheme,
   normalizeFolder,
   parseIconRef,
-  parseSize,
   renderIconInto,
-  themeVar,
 } from "./icons";
 import { MappingStore, normalizeExt } from "./mapping";
 import {
@@ -41,7 +39,10 @@ import {
 import { insideCode } from "./code-context";
 import { ExplorerIcons } from "./explorer";
 import { IconPickerModal, PickerMeta, PickerResult } from "./picker";
-import { IconGalleryModal, IconCheckModal } from "./gallery";
+import { IconGalleryModal, IconCheckModal, SaveFilesModal } from "./gallery";
+import { readFrontmatterIcon } from "./frontmatter";
+import { writeSvgFile } from "./file-save";
+import { ICON_TAG_RE, parseTagParams, refsInText } from "./shortcodes";
 import {
   IconSuggest,
   FrontmatterSuggest,
@@ -74,44 +75,6 @@ interface PluginEnvelope {
 const RECENT_LIMIT = 10;
 const FAVORITE_LIMIT = 200;
 const CONFLICT_IDS = ["iconic", "obsidian-iconize", "obsidian-icon-folder"];
-
-// {{icon:name}}, {{icon:devicon/proxmox}}, {{icon:lucide:folder}},
-// {{icon:name|24}}, {{icon:name|1.5em}}, {{icon:name|red}},
-// {{icon:name|24|blue}}, {{icon:name|dark:simple/docker}}.
-// Zweiter und dritter Teil in beliebiger Reihenfolge: Größe, Farbe
-// oder dunkle Variante. Emoji geht nur im Explorer Mapping.
-const ICON_TAG_RE =
-  /\{\{icon:([A-Za-z0-9_\-/:.]+?)(?:\.svg)?(?:\|([^{}|]*))?(?:\|([^{}|]*))?(?:\|([^{}|]*))?\}\}/g;
-
-function parseTagParams(
-  first: string | undefined,
-  second: string | undefined,
-  third: string | undefined,
-): { size?: string; color?: string; darkIcon?: string } {
-  let size: string | undefined;
-  let color: string | undefined;
-  let darkIcon: string | undefined;
-  for (const raw of [first, second, third]) {
-    const param = (raw ?? "").trim();
-    if (!param) continue;
-    if (param.startsWith("dark:")) {
-      const ref = parseIconRef(param.slice("dark:".length));
-      if (ref && !darkIcon) darkIcon = param.slice("dark:".length).trim();
-      continue;
-    }
-    if (!size) {
-      const parsed = parseSize(param);
-      if (parsed) {
-        size = parsed;
-        continue;
-      }
-    }
-    if (!color && themeVar(param)) {
-      color = param;
-    }
-  }
-  return { size, color, darkIcon };
-}
 
 /** Explizite Dunkel Variante, sonst Self-Hosted Auto Light, sonst wie hell. */
 function resolveDarkRef(
@@ -765,6 +728,14 @@ export default class MoiPlugin extends Plugin {
     this.touchRecent([result.icon]);
     this.explorer.refreshSoon();
     this.chrome.refreshSoon();
+    if (this.settings.saveFilesOnApply) {
+      for (const ref of [result.icon, result.iconDark]) {
+        if (!ref || parseIconRef(ref)?.kind !== "svg") continue;
+        // Ohne Warten, und nur was schon im Cache liegt: der Picker hat es
+        // gerade geholt, ein eigenes SVG ist bereits eine Datei.
+        void this.writeCdnFile(ref);
+      }
+    }
   }
 
   private touchRecent(refs: string[]): void {
@@ -815,43 +786,171 @@ export default class MoiPlugin extends Plugin {
   /** CDN Icon aus dem Cache als SVG Datei in den Icon Ordner schreiben. */
   private savingFiles = new Set<string>();
 
+  private async writeCdnFile(
+    ref: string,
+  ): Promise<"written" | "exists" | "missing" | "failed"> {
+    const parsed = parseIconRef(ref);
+    if (!parsed || parsed.kind !== "svg") return "failed";
+    const svg = this.cdn.peek(ref);
+    if (!svg) return "missing";
+    const folder = normalizeFolder(this.settings.iconFolder);
+    const path = `${folder}/${parsed.name}.svg`;
+    if (this.savingFiles.has(path)) return "exists";
+    this.savingFiles.add(path);
+    try {
+      const result = await writeSvgFile(
+        this.app.vault,
+        folder,
+        parsed.name,
+        svg,
+      );
+      if (result === "written") {
+        this.icons.invalidatePath(path);
+        this.explorer.refreshSoon();
+      }
+      return result;
+    } finally {
+      this.savingFiles.delete(path);
+    }
+  }
+
   private async saveCdnToFile(ref: string): Promise<void> {
     const parsed = parseIconRef(ref);
     if (!parsed || parsed.kind !== "svg") {
       new Notice(t("notice.onlySvg"));
       return;
     }
-    const svg = this.cdn.peek(ref);
-    if (!svg) {
-      new Notice(t("notice.notInCache"));
+    const result = await this.writeCdnFile(ref);
+    if (result === "written") {
+      new Notice(
+        t("notice.saved", {
+          path: `${normalizeFolder(this.settings.iconFolder)}/${parsed.name}.svg`,
+        }),
+      );
       return;
     }
-    const path = `${normalizeFolder(this.settings.iconFolder)}/${parsed.name}.svg`;
-    if (this.app.vault.getAbstractFileByPath(path) instanceof TFile) {
+    if (result === "exists") {
       new Notice(t("notice.fileExists"));
       return;
     }
-    // Doppelklick Guard: zweiter Aufruf während dem ersten läuft abweisen.
-    if (this.savingFiles.has(path)) return;
-    this.savingFiles.add(path);
+    if (result === "missing") {
+      new Notice(t("notice.notInCache"));
+      return;
+    }
+    new Notice(t("notice.fileSaveFailed"));
+  }
+
+  private savingAll = false;
+
+  /** SVG Referenzen aus Mapping, Endungen, Frontmatter und Shortcodes. */
+  private async collectUsedRefs(): Promise<Set<string>> {
+    const refs = new Set<string>();
+    const add = (raw: string | undefined): void => {
+      if (!raw) return;
+      const parsed = parseIconRef(raw);
+      if (parsed?.kind === "svg") refs.add(parsed.name);
+    };
+    for (const [, entry] of this.mapping.entries()) {
+      add(entry.icon);
+      add(entry.iconDark);
+    }
+    for (const [, entry] of this.mapping.extEntries()) {
+      add(entry.icon);
+      add(entry.iconDark);
+    }
+    for (const file of this.app.vault.getMarkdownFiles()) {
+      const frontmatter = readFrontmatterIcon(this.app, file);
+      if (frontmatter) {
+        add(frontmatter.icon);
+        add(frontmatter.iconDark);
+      }
+      let text = "";
+      try {
+        text = await this.app.vault.cachedRead(file);
+      } catch {
+        continue;
+      }
+      for (const ref of refsInText(text)) refs.add(ref);
+    }
+    return refs;
+  }
+
+  /**
+   * Verwendete oder zwischengespeicherte Icons als SVG in den Icon Ordner
+   * schreiben. `null` heisst: Dialog abgebrochen.
+   */
+  async saveAllIconFiles(): Promise<{
+    written: number;
+    exists: number;
+    failed: number;
+  } | null> {
+    if (this.savingAll) return null;
+    this.savingAll = true;
+    const scanning = new Notice(t("notice.scanning"), 0);
     try {
-      const slash = path.lastIndexOf("/");
-      if (slash > 0) {
-        const dir = path.slice(0, slash);
-        if (!this.app.vault.getAbstractFileByPath(dir)) {
-          await this.app.vault.adapter.mkdir(dir);
+      const folder = normalizeFolder(this.settings.iconFolder);
+      const used = await this.collectUsedRefs();
+      const cached = new Set(this.cdn.refs());
+      const targets = (
+        source: Set<string>,
+      ): { todo: string[]; exists: number } => {
+        const todo: string[] = [];
+        let exists = 0;
+        for (const ref of source) {
+          const parsed = parseIconRef(ref);
+          if (!parsed || parsed.kind !== "svg") continue;
+          const path = `${folder}/${parsed.name}.svg`;
+          if (this.app.vault.getAbstractFileByPath(path) instanceof TFile) {
+            exists++;
+          } else {
+            todo.push(ref);
+          }
+        }
+        return { todo, exists };
+      };
+      const usedTargets = targets(used);
+      const allTargets = targets(new Set([...used, ...cached]));
+      scanning.hide();
+      const mode = await new Promise<"used" | "all" | null>((resolve) => {
+        new SaveFilesModal(
+          this.app,
+          {
+            used: {
+              count: usedTargets.todo.length,
+              exists: usedTargets.exists,
+            },
+            all: { count: allTargets.todo.length, exists: allTargets.exists },
+          },
+          resolve,
+        ).open();
+      });
+      if (!mode) return null;
+      const chosen = mode === "used" ? usedTargets : allTargets;
+      let written = 0;
+      let failed = 0;
+      const failedRefs: string[] = [];
+      for (const ref of chosen.todo) {
+        // getSvg bedient sich am Cache und lädt nur nach, was fehlt.
+        if (!(await this.cdn.getSvg(ref))) {
+          failed++;
+          failedRefs.push(ref);
+          continue;
+        }
+        const result = await this.writeCdnFile(ref);
+        if (result === "written") written++;
+        else if (result !== "exists") {
+          failed++;
+          failedRefs.push(ref);
         }
       }
-      await this.app.vault.create(path, svg);
-    } catch {
-      new Notice(t("notice.fileSaveFailed"));
-      return;
+      if (failedRefs.length > 0) {
+        console.warn(`[moi] Icons nicht speicherbar: ${failedRefs.join(", ")}`);
+      }
+      return { written, exists: chosen.exists, failed };
     } finally {
-      this.savingFiles.delete(path);
+      scanning.hide();
+      this.savingAll = false;
     }
-    this.icons.invalidatePath(path);
-    this.explorer.refreshSoon();
-    new Notice(t("notice.saved", { path }));
   }
 
   cacheSize(): number {
@@ -1193,7 +1292,7 @@ class MoiSettingTab extends PluginSettingTab {
       this.plugin.saveSettingsSoon();
       return;
     }
-    // Nur die fuenf Schalter, keine fremden Schluessel annehmen.
+    // Nur die Schalter, keine fremden Schluessel annehmen.
     if (typeof value === "boolean" && isBooleanSettingKey(k)) {
       this.plugin.settings[k] = value;
       void this.plugin.saveSettings();
@@ -1316,6 +1415,12 @@ class MoiSettingTab extends PluginSettingTab {
         control: { type: "toggle", key: "selfhostEnabled" },
       },
       {
+        name: t("set.saveOnPick.name"),
+        desc: t("set.saveOnPick.desc"),
+        aliases: ["offline", "svg"],
+        control: { type: "toggle", key: "saveFilesOnApply" },
+      },
+      {
         name: t("set.stand.name"),
         desc: this.plugin.catalogStandText(),
         aliases: ["catalog", "index"],
@@ -1341,6 +1446,18 @@ class MoiSettingTab extends PluginSettingTab {
               this.update();
             }),
           );
+        },
+      },
+      {
+        name: t("set.saveAll.name"),
+        desc: t("set.saveAll.desc"),
+        aliases: ["offline", "svg", "migration"],
+        action: () => {
+          void this.plugin.saveAllIconFiles().then((result) => {
+            if (!result) return;
+            new Notice(t("notice.saveAllDone", result));
+            this.update();
+          });
         },
       },
       {

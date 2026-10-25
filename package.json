@@ -1,6 +1,6 @@
 {
   "name": "moi-icons",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Obsidian Plugin: {{icon:name}} in Notizen und Explorer Icons per Rechtsklick",
   "main": "main.js",
   "scripts": {

@@ -178,6 +178,17 @@ A separate switch covers self-hosted icons from selfh.st as `selfhosted:name`, a
 homelab brands with tags. In the dark theme the light variant is used automatically when
 available, and the light variant is on by default; a manually chosen dark variant always wins.
 
+## Without the CDN
+
+Save as file when assigning is on by default: every icon you pick in the picker also lands as an
+SVG in `_assets/icons`. That icon then no longer needs the CDN, even offline. Existing files stay
+untouched, so a corrected CDN version only arrives after you delete the file.
+
+For icons already in use there is Save existing icons as files. It scans the mapping, extension
+rules, frontmatter and every `{{icon:…}}` in your notes, and tells you beforehand how many files
+would be new and how many already exist. You choose between used icons only and everything still
+in the device cache.
+
 ## Export and import
 
 The commands Export icons and Import icons, as well as the buttons in the settings, pack the

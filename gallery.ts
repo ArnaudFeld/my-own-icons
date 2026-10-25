@@ -256,3 +256,74 @@ export class IconCheckModal extends Modal {
     this.contentEl.empty();
   }
 }
+
+export interface SaveFilesCounts {
+  used: { count: number; exists: number };
+  all: { count: number; exists: number };
+}
+
+/**
+ * Auswahl vor der Sammelaktion: nur verwendete oder auch die Icons, die
+ * noch im Gerätespeicher liegen. Die Zahlen stehen vorher da.
+ */
+export class SaveFilesModal extends Modal {
+  private done = false;
+
+  constructor(
+    app: App,
+    private counts: SaveFilesCounts,
+    private onChoose: (mode: "used" | "all" | null) => void,
+  ) {
+    super(app);
+  }
+
+  onOpen(): void {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h3", { text: t("saveAll.title") });
+    contentEl.createDiv({ text: t("saveAll.hint") });
+    contentEl.createDiv({
+      text: t("saveAll.usedLine", {
+        count: this.counts.used.count,
+        exists: this.counts.used.exists,
+      }),
+      cls: "obsidian-icon-picker-more",
+    });
+    contentEl.createDiv({
+      text: t("saveAll.cacheLine", {
+        count: this.counts.all.count,
+        exists: this.counts.all.exists,
+      }),
+      cls: "obsidian-icon-picker-more",
+    });
+    const footer = contentEl.createDiv({
+      cls: "obsidian-icon-picker-footer",
+    });
+    footer
+      .createEl("button", {
+        text: t("saveAll.used", { count: this.counts.used.count }),
+        cls: "mod-cta",
+      })
+      .addEventListener("click", () => this.pick("used"));
+    footer
+      .createEl("button", {
+        text: t("saveAll.cache", { count: this.counts.all.count }),
+      })
+      .addEventListener("click", () => this.pick("all"));
+    footer
+      .createEl("button", { text: t("saveAll.cancel") })
+      .addEventListener("click", () => this.pick(null));
+  }
+
+  private pick(mode: "used" | "all" | null): void {
+    if (this.done) return;
+    this.done = true;
+    this.close();
+    this.onChoose(mode);
+  }
+
+  onClose(): void {
+    this.contentEl.empty();
+    if (!this.done) this.onChoose(null);
+  }
+}

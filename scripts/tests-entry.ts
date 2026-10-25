@@ -20,6 +20,8 @@ import {
 } from "../i18n";
 import { badgeKey, isBadgeMutation } from "../explorer";
 import { unusedSvgNames } from "../gallery";
+import { ensureFolder, writeSvgFile } from "../file-save";
+import { refsInText } from "../shortcodes";
 import {
   setStubLanguage,
   setStubFetch,
@@ -717,6 +719,7 @@ check("Einstellungen übernehmen gültige Werte", () => {
     mappingFile: "map.json",
     cdnEnabled: true,
     selfhostEnabled: true,
+    saveFilesOnApply: true,
     autoLightVariant: false,
     showTabIcons: false,
     showTitleIcons: false,
@@ -1026,6 +1029,95 @@ check("Bereinigung ohne svg ergibt leeren String", () => {
   );
 });
 
+await checkAsync("ensureFolder legt fehlende Ebenen an", async () => {
+  const app = testApp();
+  const vault = app.vault as unknown as import("obsidian").Vault;
+  assert.equal(await ensureFolder(vault, "_assets/icons/devicon"), true);
+  assert.deepEqual([...app.vault.folders].sort(), [
+    "_assets",
+    "_assets/icons",
+    "_assets/icons/devicon",
+  ]);
+  assert.equal(await ensureFolder(vault, "_assets/icons/devicon"), true);
+  assert.equal(app.vault.folders.size, 3);
+});
+
+await checkAsync("writeSvgFile legt Unterordner an", async () => {
+  const app = testApp();
+  const vault = app.vault as unknown as import("obsidian").Vault;
+  assert.equal(
+    await writeSvgFile(vault, "_assets/icons", "devicon/react", "<svg/>"),
+    "written",
+  );
+  assert.equal(
+    app.vault.files.get("_assets/icons/devicon/react.svg"),
+    "<svg/>",
+  );
+  assert.ok(app.vault.folders.has("_assets/icons/devicon"));
+});
+
+await checkAsync("writeSvgFile überschreibt nichts", async () => {
+  const app = testApp();
+  const vault = app.vault as unknown as import("obsidian").Vault;
+  app.vault.files.set("_assets/icons/server.svg", "<svg id='alt'/>");
+  assert.equal(
+    await writeSvgFile(vault, "_assets/icons", "server", "<svg id='neu'/>"),
+    "exists",
+  );
+  assert.equal(
+    app.vault.files.get("_assets/icons/server.svg"),
+    "<svg id='alt'/>",
+  );
+});
+
+await checkAsync("writeSvgFile ohne Ordner schreibt nicht", async () => {
+  const app = testApp();
+  const vault = app.vault as unknown as import("obsidian").Vault;
+  assert.equal(await writeSvgFile(vault, "", "server", "<svg/>"), "failed");
+  assert.equal(app.vault.files.size, 0);
+});
+
+check("CdnCache.refs listet die Schlüssel", () => {
+  const cache = new CdnCache({
+    load: () => ({
+      "devicon/react": "<svg/>",
+      "simple/github": "<svg/>",
+    }),
+    save: () => {},
+  });
+  assert.deepEqual(cache.refs().sort(), ["devicon/react", "simple/github"]);
+});
+
+check("saveFilesOnApply bleibt beim Laden erhalten", () => {
+  assert.equal(
+    readSettings({ saveFilesOnApply: false }).saveFilesOnApply,
+    false,
+  );
+  assert.equal(readSettings({}).saveFilesOnApply, true);
+  assert.equal(readSettings({ saveFilesOnApply: "ja" }).saveFilesOnApply, true);
+});
+
+check("Shortcode Scan liest verwendete Icons", () => {
+  assert.deepEqual(
+    refsInText(
+      "a {{icon:devicon/react|20|dark:simple/github}} b {{icon:lucide:folder}}",
+    ),
+    ["devicon/react", "simple/github"],
+  );
+  assert.deepEqual(refsInText("{{icon:server.svg}}"), ["server"]);
+  assert.deepEqual(refsInText("{{icon:🔧}}"), []);
+  assert.deepEqual(refsInText("kein Shortcode"), []);
+  // Beispiele in Code sind keine Icons, genau wie im Renderer.
+  assert.deepEqual(refsInText("`{{icon:name}}` und ``{{icon:x}}``"), []);
+  assert.deepEqual(refsInText("```\n{{icon:server}}\n```"), []);
+  assert.deepEqual(
+    refsInText(
+      "Text `{{icon:x}}`\n\n```md\n{{icon:name}}\n```\n\n{{icon:server}}",
+    ),
+    ["server"],
+  );
+});
+
 /**
  * Die Obsidian Helfer createEl, createDiv und createSpan haengen ihr Ergebnis
  * an den Empfaenger. Auf document aufzurufen wirft HierarchyRequestError, weil
@@ -1039,6 +1131,7 @@ check("Kein create-Helfer mit document als Empfaenger", () => {
     "code-context.ts",
     "exchange.ts",
     "explorer.ts",
+    "file-save.ts",
     "frontmatter.ts",
     "gallery.ts",
     "i18n.ts",
@@ -1049,6 +1142,7 @@ check("Kein create-Helfer mit document als Empfaenger", () => {
     "selfhost-catalog.ts",
     "cdn-catalog.ts",
     "settings.ts",
+    "shortcodes.ts",
     "suggest.ts",
     "tabs-titles.ts",
   ];

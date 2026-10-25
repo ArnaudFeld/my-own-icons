@@ -37,6 +37,18 @@ const STRINGS: Record<string, Record<string, string>> = {
     "notice.conflict":
       "{names} ist auch aktiv und verändert Explorer Icons, es kann zu Überschneidungen kommen.",
     "notice.checkOk": "Icons ok: {used} vergeben, {unused} ungenutzt",
+    "notice.scanning": "Notizen werden durchsucht, einen Moment.",
+    "notice.saveAllDone":
+      "{written} gespeichert, {exists} schon vorhanden, {failed} fehlgeschlagen.",
+
+    "saveAll.title": "Icons als Dateien speichern",
+    "saveAll.hint":
+      "Vorhandene Dateien werden nicht überschrieben. Der Icon Ordner wird bei Bedarf angelegt.",
+    "saveAll.usedLine": "Verwendet: {count} neu, {exists} schon vorhanden.",
+    "saveAll.cacheLine": "Mit Cache: {count} neu, {exists} schon vorhanden.",
+    "saveAll.used": "Nur verwendete ({count})",
+    "saveAll.cache": "Auch aus dem Cache ({count})",
+    "saveAll.cancel": "Abbrechen",
 
     "cat.devicon": "Devicon: {value}",
     "cat.simple": "Simple: {value}",
@@ -47,7 +59,8 @@ const STRINGS: Record<string, Record<string, string>> = {
     "cat.off": "CDN aus, nur Dateien und Lucide.",
 
     "set.iconFolder.name": "Icon Ordner",
-    "set.iconFolder.desc": "Pfad im Vault, ohne führenden Schrägstrich.",
+    "set.iconFolder.desc":
+      "Pfad im Vault, ohne führenden Schrägstrich. Der Ordner wird beim Speichern angelegt.",
     "set.mappingFile.name": "Mapping Datei",
     "set.mappingFile.desc":
       "Zuordnung Explorer Pfad auf Icon, als JSON im Vault.",
@@ -64,11 +77,17 @@ const STRINGS: Record<string, Record<string, string>> = {
     "set.selfhost.name": "Self-Hosted Icons",
     "set.selfhost.desc":
       "Homelab Marken von selfh.st per CDN, CC-BY-4.0 mit Namensnennung in der README.",
+    "set.saveOnPick.name": "Beim Setzen als Datei speichern",
+    "set.saveOnPick.desc":
+      "Das gewählte Icon gleich als SVG in den Icon Ordner schreiben, damit es ohne CDN bleibt. Vorhandene Dateien bleiben unverändert.",
     "set.stand.name": "Katalog Stand",
     "set.stand.reload": "Neu laden",
     "set.cache.name": "Icon Cache",
     "set.cache.count": "{count} Icons auf diesem Gerät.",
     "set.cache.clear": "Leeren",
+    "set.saveAll.name": "Bestehende Icons als Dateien speichern",
+    "set.saveAll.desc":
+      "Durchsucht Notizen nach verwendeten Icons und schreibt sie als SVG in den Icon Ordner.",
     "set.autoLight.name": "Helle Variante automatisch",
     "set.autoLight.desc":
       "Im dunklen Theme die helle Self-Hosted Variante nehmen wenn vorhanden. Hand Wahl gewinnt.",
@@ -179,6 +198,18 @@ const STRINGS: Record<string, Record<string, string>> = {
     "notice.conflict":
       "{names} is active too and modifies explorer icons, overlaps may occur.",
     "notice.checkOk": "Icons ok: {used} assigned, {unused} unused",
+    "notice.scanning": "Scanning notes, one moment.",
+    "notice.saveAllDone":
+      "{written} saved, {exists} already present, {failed} failed.",
+
+    "saveAll.title": "Save icons as files",
+    "saveAll.hint":
+      "Existing files are not overwritten. The icon folder is created when needed.",
+    "saveAll.usedLine": "Used: {count} new, {exists} already present.",
+    "saveAll.cacheLine": "With cache: {count} new, {exists} already present.",
+    "saveAll.used": "Used only ({count})",
+    "saveAll.cache": "Include cache ({count})",
+    "saveAll.cancel": "Cancel",
 
     "cat.devicon": "Devicon: {value}",
     "cat.simple": "Simple: {value}",
@@ -189,7 +220,8 @@ const STRINGS: Record<string, Record<string, string>> = {
     "cat.off": "CDN off, only files and Lucide.",
 
     "set.iconFolder.name": "Icon folder",
-    "set.iconFolder.desc": "Path in the vault, without leading slash.",
+    "set.iconFolder.desc":
+      "Path in the vault, without leading slash. The folder is created when an icon is saved.",
     "set.mappingFile.name": "Mapping file",
     "set.mappingFile.desc":
       "Maps explorer paths to icons, stored as JSON in the vault.",
@@ -206,11 +238,17 @@ const STRINGS: Record<string, Record<string, string>> = {
     "set.selfhost.name": "Self-hosted icons",
     "set.selfhost.desc":
       "Homelab brands from selfh.st via CDN, CC-BY-4.0, credit in the README.",
+    "set.saveOnPick.name": "Save as file when assigning",
+    "set.saveOnPick.desc":
+      "Write the chosen icon straight into the icon folder as SVG so it keeps working without the CDN. Existing files stay untouched.",
     "set.stand.name": "Catalog version",
     "set.stand.reload": "Reload",
     "set.cache.name": "Icon cache",
     "set.cache.count": "{count} icons on this device.",
     "set.cache.clear": "Clear",
+    "set.saveAll.name": "Save existing icons as files",
+    "set.saveAll.desc":
+      "Scans notes for used icons and writes them into the icon folder as SVG.",
     "set.autoLight.name": "Automatic light variant",
     "set.autoLight.desc":
       "In dark mode use the light self-hosted variant when available. A manual choice always wins.",
@@ -332,7 +370,7 @@ const STRINGS: Record<string, Record<string, string>> = {
 
     "set.iconFolder.name": "Dossier d'icônes",
     "set.iconFolder.desc":
-      "Chemin dans le coffre, sans barre oblique initiale.",
+      "Chemin dans le coffre, sans barre oblique initiale. Le dossier est créé lors de l'enregistrement.",
     "set.mappingFile.name": "Fichier de mappage",
     "set.mappingFile.desc":
       "Associe les chemins de l'explorateur aux icônes, en JSON dans le coffre.",
@@ -349,11 +387,17 @@ const STRINGS: Record<string, Record<string, string>> = {
     "set.selfhost.name": "Icônes auto-hébergées",
     "set.selfhost.desc":
       "Marques homelab de selfh.st via CDN, CC-BY-4.0, mention dans le README.",
+    "set.saveOnPick.name": "Enregistrer comme fichier lors de l'attribution",
+    "set.saveOnPick.desc":
+      "Écrire directement l'icône choisie en SVG dans le dossier d'icônes pour qu'elle reste disponible sans CDN. Les fichiers existants ne sont pas modifiés.",
     "set.stand.name": "Version du catalogue",
     "set.stand.reload": "Recharger",
     "set.cache.name": "Cache d'icônes",
     "set.cache.count": "{count} icônes sur cet appareil.",
     "set.cache.clear": "Vider",
+    "set.saveAll.name": "Enregistrer les icônes existantes comme fichiers",
+    "set.saveAll.desc":
+      "Parcourt les notes pour trouver les icônes utilisées et les écrit en SVG dans le dossier d'icônes.",
     "set.autoLight.name": "Variante claire automatique",
     "set.autoLight.desc":
       "En mode sombre, utiliser la variante claire auto-hébergée si disponible. Un choix manuel prime toujours.",
@@ -432,6 +476,20 @@ const STRINGS: Record<string, Record<string, string>> = {
     "check.title": "Vérifier les icônes",
     "check.summary":
       "{used} attribuées, {unused} non utilisées, {broken} cassées",
+    "notice.scanning": "Analyse des notes en cours, un instant.",
+    "notice.saveAllDone":
+      "{written} enregistrées, {exists} déjà présentes, {failed} en échec.",
+
+    "saveAll.title": "Enregistrer les icônes comme fichiers",
+    "saveAll.hint":
+      "Les fichiers existants ne sont pas écrasés. Le dossier d'icônes est créé au besoin.",
+    "saveAll.usedLine":
+      "Utilisées : {count} nouvelles, {exists} déjà présentes.",
+    "saveAll.cacheLine":
+      "Avec le cache : {count} nouvelles, {exists} déjà présentes.",
+    "saveAll.used": "Utilisées seulement ({count})",
+    "saveAll.cache": "Inclure le cache ({count})",
+    "saveAll.cancel": "Annuler",
 
     "ex.done": "Exporté : {path}",
     "ex.tooBig": "Échec de l'import : fichier trop volumineux",
@@ -478,7 +536,8 @@ const STRINGS: Record<string, Record<string, string>> = {
     "cat.off": "CDN desactivado, solo archivos y Lucide.",
 
     "set.iconFolder.name": "Carpeta de iconos",
-    "set.iconFolder.desc": "Ruta en el baúl, sin barra inicial.",
+    "set.iconFolder.desc":
+      "Ruta en el baúl, sin barra inicial. La carpeta se crea al guardar.",
     "set.mappingFile.name": "Archivo de mapeo",
     "set.mappingFile.desc":
       "Asigna rutas del explorador a iconos, como JSON en el baúl.",
@@ -495,11 +554,17 @@ const STRINGS: Record<string, Record<string, string>> = {
     "set.selfhost.name": "Iconos autoalojados",
     "set.selfhost.desc":
       "Marcas homelab de selfh.st vía CDN, CC-BY-4.0, crédito en el README.",
+    "set.saveOnPick.name": "Guardar como archivo al asignar",
+    "set.saveOnPick.desc":
+      "Escribe el icono elegido directamente como SVG en la carpeta de iconos para que siga disponible sin CDN. Los archivos existentes no se tocan.",
     "set.stand.name": "Versión del catálogo",
     "set.stand.reload": "Recargar",
     "set.cache.name": "Caché de iconos",
     "set.cache.count": "{count} iconos en este dispositivo.",
     "set.cache.clear": "Vaciar",
+    "set.saveAll.name": "Guardar iconos existentes como archivos",
+    "set.saveAll.desc":
+      "Recorre las notas en busca de iconos usados y los escribe como SVG en la carpeta de iconos.",
     "set.autoLight.name": "Variante clara automática",
     "set.autoLight.desc":
       "En modo oscuro usar la variante clara autoalojada si existe. Una elección manual siempre gana.",
@@ -577,6 +642,18 @@ const STRINGS: Record<string, Record<string, string>> = {
     "check.title": "Comprobar iconos",
     "check.summary":
       "{used} asignados, {unused} sin usar, {broken} defectuosos",
+    "notice.scanning": "Analizando las notas, un momento.",
+    "notice.saveAllDone":
+      "{written} guardados, {exists} ya presentes, {failed} fallidos.",
+
+    "saveAll.title": "Guardar iconos como archivos",
+    "saveAll.hint":
+      "Los archivos existentes no se sobrescriben. La carpeta de iconos se crea si hace falta.",
+    "saveAll.usedLine": "Usados: {count} nuevos, {exists} ya presentes.",
+    "saveAll.cacheLine": "Con caché: {count} nuevos, {exists} ya presentes.",
+    "saveAll.used": "Solo usados ({count})",
+    "saveAll.cache": "Incluir caché ({count})",
+    "saveAll.cancel": "Cancelar",
 
     "ex.done": "Exportado: {path}",
     "ex.tooBig": "Error de importación: archivo demasiado grande",

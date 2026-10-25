@@ -183,6 +183,18 @@ Ein eigener Schalter deckt die self-hosted Icons von selfh.st als `selfhosted:na
 sie vorhanden ist, und die helle Variante ist voreingestellt; eine selbst gewählte dunkle Variante
 gewinnt immer.
 
+## Ohne CDN
+
+Der Schalter Beim Setzen als Datei speichern ist standardmäßig an: jedes Icon, das du im Picker
+wählst, landet zusätzlich als SVG in `_assets/icons`. Danach braucht dieses Icon das CDN nicht
+mehr, auch offline nicht. Vorhandene Dateien bleiben unverändert, eine korrigierte CDN-Version
+kommt also erst nach dem Löschen der Datei an.
+
+Für den Bestand gibt es Bestehende Icons als Dateien speichern. Die Aktion durchsucht Zuordnung,
+Endungsvorgaben, Frontmatter und alle `{{icon:…}}` in Notizen und nennt vorher, wie viele Dateien
+neu entstehen und wie viele schon da sind. Du wählst zwischen nur verwendeten Icons und allen,
+die noch im Geräte-Cache liegen.
+
 ## Export und Import
 
 Die Befehle Icons exportieren und Icons importieren, sowie die Knöpfe in den Einstellungen,

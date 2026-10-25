@@ -365,6 +365,11 @@ export class CdnCache {
     return this.cache.size;
   }
 
+  /** Zwischengespeicherte Referenzen, für die Sammelaktion. */
+  refs(): string[] {
+    return [...this.cache.keys()];
+  }
+
   clear(): void {
     this.cache.clear();
     this.missing.clear();

@@ -12,6 +12,7 @@ export interface MoiSettings {
   mappingFile: string;
   cdnEnabled: boolean;
   selfhostEnabled: boolean;
+  saveFilesOnApply: boolean;
   autoLightVariant: boolean;
   showTabIcons: boolean;
   showTitleIcons: boolean;
@@ -22,6 +23,7 @@ export const DEFAULT_SETTINGS: MoiSettings = {
   mappingFile: "_assets/icon-mapping.json",
   cdnEnabled: false,
   selfhostEnabled: false,
+  saveFilesOnApply: true,
   autoLightVariant: true,
   showTabIcons: true,
   showTitleIcons: true,
@@ -31,6 +33,7 @@ const STRING_FIELDS = ["iconFolder", "mappingFile"] as const;
 export const BOOLEAN_FIELDS = [
   "cdnEnabled",
   "selfhostEnabled",
+  "saveFilesOnApply",
   "autoLightVariant",
   "showTabIcons",
   "showTitleIcons",

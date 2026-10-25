@@ -1,7 +1,7 @@
 {
   "id": "moi-icons",
   "name": "My Own Icons",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "minAppVersion": "1.13.0",
   "description": "Use your own SVGs, Devicon, Simple Icons and Lucide in notes via a shortcode, and in the file explorer.",
   "author": "ArnaudFeld",
